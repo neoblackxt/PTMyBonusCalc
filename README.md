@@ -1,0 +1,2 @@
+# PTMyBonusCalc
+在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
