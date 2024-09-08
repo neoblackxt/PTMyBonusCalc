@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.0.2
+// @version      2.0.3
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
 // @author       neoblackxt, LaneLau
 // @require      https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
@@ -37,11 +37,11 @@
 // @grant        GM_getValue
 // @grant        window.onurlchange
 // ==/UserScript==
-
+ 
 function run() {
     var $ = jQuery;
-
-
+ 
+ 
     let argsReady = true;
     let T0 = GM_getValue(host + ".T0");
     let N0 = GM_getValue(host + ".N0");
@@ -58,20 +58,19 @@ function run() {
         N0 = parseInt($("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
         B0 = parseInt($("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
         L = parseInt($("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
-
+ 
         GM_setValue(host + ".T0",T0);
         GM_setValue(host + ".N0",N0);
         GM_setValue(host + ".B0",B0);
         GM_setValue(host + ".L",L);
-
+ 
         let A = isMTeam?0:parseFloat($("div:contains(' (A = ')")[0].innerText.split(" = ")[1]);
-        debugger
-
-
+ 
+ 
         let B = isMTeam?parseFloat($("td:contains('基本獎勵')+td+td")[0].innerText):0
         // FIXME: B的上限是B0,怎么可能出现B>=B0的情况
         B = B>=B0?B0*0.98:B
-
+ 
         if(!argsReady){
             if(T0 && N0 && B0 && L){
                 alert("魔力值参数已更新")
@@ -79,26 +78,26 @@ function run() {
                 alert("魔力值参数获取失败")
             }
         }
-
+ 
         function calcB(A){
             return B0*(2/Math.PI)*Math.atan(A/L)
         }
-
+ 
         function calcAbyB(B){
             //从B值反推A值
             return Math.tan(B/B0/(2/Math.PI))*L
         }
-
+ 
         let spot = isMTeam?[calcAbyB(B),B]:[A,calcB(A)]
-
+ 
         let data = []
         for (let i=0; i<25*L; i=i+L/4){
             data.push([i,calcB(i)])
         }
-
+ 
         let insertPos = isMTeam?$("ul+table"):$("table+h1")
         insertPos.before('<div id="main" style="width: 600px;height:400px; margin:auto;"></div>')
-
+ 
         var myChart = echarts.init(document.getElementById('main'));
         // 指定图表的配置项和数据
         var option = {
@@ -119,7 +118,7 @@ function run() {
                     return obj;
                 },
                 extraCssText: 'width: 170px'
-
+ 
             },
             xAxis: {
                 name: 'A',
@@ -145,13 +144,13 @@ function run() {
                 }
             ]
         };
-
+ 
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
     }
-
-
-
+ 
+ 
+ 
     function calcA(T, S, N) {
         var c1 = 1 - Math.pow(10, -(T / T0));
         // 当断种时，显示续种后的实际值，因为当前状态值无意义
@@ -161,7 +160,7 @@ function run() {
         var c2 = 1 + Math.pow(2, .5) * Math.pow(10, -(N - 1) / (N0 - 1));
         return c1 * S * c2;
     }
-
+ 
     function makeA($this, i_T, i_S, i_N) {
         var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
@@ -191,17 +190,16 @@ function run() {
             return '<span style="">' + A + '@' + ave + "</span>"
         }
     }
-
-
-
+ 
+ 
+ 
     function addDataColGeneral(){
         var i_T, i_S, i_N
         $(seedTableSelector).each(function (row) {
             var $this = $(this);
             if (row == 0) {
                 $this.children('td').each(function (col) {
-                    debugger;
-
+ 
                     if ($(this).find('img.time').length) {
                         i_T = col
                     } else if ($(this).find('img.size').length) {
@@ -221,11 +219,10 @@ function run() {
             }
         })
     }
-
+ 
     function addDataColMTeam(){
         let i_T, i_S, i_N,addFlag=false
-        debugger;
-
+ 
         let colLen = $('div.mt-4>table>thead>tr>th').length
         if ($('div.mt-4>table>thead>tr>th:last').text().indexOf('A@A/GB')!=-1){
             addFlag = true
@@ -248,15 +245,15 @@ function run() {
             }
         })
     }
-
+ 
     if(isMTeam){
         addDataColMTeam()
     }else{
         addDataColGeneral()
     }
 }
-
-
+ 
+ 
 function MTteamWaitPageLoadAndRun(){
     let $ = jQuery
     let count = 0
@@ -264,10 +261,10 @@ function MTteamWaitPageLoadAndRun(){
     let T0Found = false
     let seedTableFound = false
     let itv = setInterval(()=>{
-
+ 
         if(isMybonusPage){
             T0Found = $("li:has(b:contains('T0'))")[1]
-
+ 
         }
         if(T0Found || seedTableFound || count >= 100){
             clearInterval(itv);
@@ -275,7 +272,7 @@ function MTteamWaitPageLoadAndRun(){
         }
         count++
     },100);
-
+ 
     let count2 = 0
     let itvTableBlur = setInterval(()=>{
         if($('div.ant-spin-blur')[0]||count2>=50){
@@ -305,7 +302,7 @@ if (isMTeam){
 }else{
     run()
 }
-
+ 
 var currentUrl = window.location.href;
 if (window.onurlchange === null) {
     // feature is supported
