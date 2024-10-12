@@ -31,6 +31,7 @@
 // @match        *://pt.btschool.club/torrents*
 // @match        *://*.1ptba.com/torrents*
 // @match        *://www.oshen.win/torrents*
+// @match        *://*.rousi.zip/torrents*
 // @match        *://*/mybonus*
 // @license      GPL License
 // @grant        GM_setValue
