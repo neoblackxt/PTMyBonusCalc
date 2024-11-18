@@ -33,7 +33,7 @@ https://github.com/neoblackxt/PTMyBonusCalc/issues
 
 请将不支持的站点的种子列表和魔力值网页源代码粘贴在issue中，**注意把你的网站ID信息以及其他敏感信息删除，但不要破环网页结构** 不知道怎么删除请不要发出来（Ctrl + U 查看网页源代码，Ctrl + S 保存文件）。
 
-如果可以，希望你能邀请我注册这些站点，这样我可以更方便的调试代码，修复BUG。 QQ:1195371727 EMAIL:neoblackxt在outlook点com 在换成@，点换成. （防止爬虫自动抓取发送垃圾邮件）
+如果可以，希望你能邀请我注册这些站点，这样我可以更方便的调试代码，修复BUG。 Telegram:@naoguregt EMAIL:neoblackxt在outlook点com 在换成@，点换成. （防止爬虫自动抓取发送垃圾邮件）
 
 ### Credit
 
