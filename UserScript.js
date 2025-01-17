@@ -165,6 +165,9 @@ function run() {
  
     function makeA($this, i_T, i_S, i_N) {
         var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
+        if(time == ""){
+            time = $this.children('td:eq(' + i_T + ')').find("span").text();
+        }
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
         var size = $this.children('td:eq(' + i_S + ')').text().trim();
         var size_tp = 1;
