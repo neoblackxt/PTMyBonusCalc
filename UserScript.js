@@ -85,7 +85,21 @@ function run() {
 
         let A = isMTeam ? 0 : parseFloat($("div:contains(' (A = ')")[0].innerText.split(" = ")[1]);
         let B = isMTeam ? parseFloat($("td:contains('基本獎勵')+td+td")[0].innerText) : calcB(A);
-        // FIXME: B的上限是B0,怎么可能出现B>=B0的情况
+        if (isMTeam) {
+            let matches = $("h5:contains('做種每小時將得到如下的魔力值')").next().children().first().text()
+                .match(/(\d+(\.\d+)?)個魔力值.*最多計(\d+)個/);
+            let seedingBonusPerSeed = parseFloat(matches[1]);
+            let seedingBonusLimit = parseInt(matches[3]);
+            let currentSeedingNode = $("span:contains('當前活動')").parent().clone();
+            currentSeedingNode.find('img').replaceWith(function () {
+                return "img";
+            });
+            let currentSeeding = parseInt(currentSeedingNode.text().match(/(\d+)/)[1]);
+            B = B - (currentSeeding > seedingBonusLimit ?
+                seedingBonusPerSeed * seedingBonusLimit : seedingBonusPerSeed * currentSeeding);
+        }
+        // 对于M-Team，B>B0是因为网页获取的基本奖励包括了做种数的奖励，上面代码已经进行排除。
+        // 其他站暂不明确是否有该问题，下面一行的代码暂时保留
         B = B >= B0 ? B0 * 0.98 : B
         if (isMTeam) {
             A = calcAbyB(B);
