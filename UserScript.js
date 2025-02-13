@@ -279,6 +279,7 @@ function MTteamWaitPageLoadAndRun() {
     let tableBlured = false
     let T0Found = false
     let seedTableFound = false
+    isMybonusPage = window.location.toString().indexOf("mybonus") != -1
     let itv = setInterval(() => {
 
         if (isMybonusPage) {
