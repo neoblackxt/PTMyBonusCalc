@@ -279,6 +279,7 @@ function MTteamWaitPageLoadAndRun() {
     let tableBlured = false
     let T0Found = false
     let seedTableFound = false
+    // 页面局部刷新后重新判断 isMybonusPage
     isMybonusPage = window.location.toString().indexOf("mybonus") != -1
     let itv = setInterval(() => {
 
@@ -327,6 +328,6 @@ if (isMTeam) {
 
 var currentUrl = window.location.href;
 if (window.onurlchange === null) {
-    // feature is supported
+    // M-Team 页面局部刷新时重新运行函数
     window.addEventListener('urlchange', (info) => MTteamWaitPageLoadAndRun());
 }
