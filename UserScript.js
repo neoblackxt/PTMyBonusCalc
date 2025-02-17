@@ -33,6 +33,8 @@
 // @match        *://www.oshen.win/torrents*
 // @match        *://*.rousi.zip/torrents*
 // @match        *://*.kufei.org/torrents*
+// @match        *://*.tjupt.org/torrents*
+// @match        *://*.tjupt.org/bonus*
 // @match        *://*/mybonus*
 // @license      GPL License
 // @grant        GM_setValue
@@ -135,7 +137,6 @@ function run() {
                     return obj;
                 },
                 extraCssText: 'width: 170px'
-
             },
             xAxis: {
                 name: 'A',
@@ -179,8 +180,11 @@ function run() {
 
     function makeA($this, i_T, i_S, i_N) {
         var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
-        if (time == "") {
+        if (time == undefined || time == "") {
             time = $this.children('td:eq(' + i_T + ')').find("span").text();
+        }
+        if (time == undefined || time == "") {
+            time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
         }
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
         var size = $this.children('td:eq(' + i_S + ')').text().trim();
@@ -317,6 +321,9 @@ let host = window.location.host.match(/\b[^\.]+\.[^\.]+$/)[0]
 let isMTeam = window.location.toString().indexOf("m-team") != -1
 let seedTableSelector = isMTeam ? 'div.mt-4>table>tbody>tr' : '.torrents:last-of-type>tbody>tr'
 let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
+if (window.location.toString().indexOf("tjupt.org") != -1) {
+    isMybonusPage = window.location.toString().indexOf("bonus.php") != -1
+}
 if (isMTeam) {
     if (isMybonusPage || window.location.toString().indexOf("browse") != -1) {
         MTteamWaitPageLoadAndRun()
