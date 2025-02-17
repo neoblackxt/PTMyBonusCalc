@@ -87,6 +87,7 @@ function run() {
 
         let A = isMTeam ? 0 : parseFloat($("div:contains(' (A = ')")[0].innerText.split(" = ")[1]);
         let B = isMTeam ? parseFloat($("td:contains('基本獎勵')+td+td")[0].innerText) : calcB(A);
+        // 剔除M-Team的基本奖励中做种数奖励
         if (isMTeam) {
             let matches = $("h5:contains('做種每小時將得到如下的魔力值')").next().children().first().text()
                 .match(/(\d+(\.\d+)?)個魔力值.*最多計(\d+)個/);
@@ -180,9 +181,11 @@ function run() {
 
     function makeA($this, i_T, i_S, i_N) {
         var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
+        // 适配m-team的发生时间
         if (time == undefined || time == "") {
             time = $this.children('td:eq(' + i_T + ')').find("span").text();
         }
+        // 适配tjupt的发生时间
         if (time == undefined || time == "") {
             time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
         }
