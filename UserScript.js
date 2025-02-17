@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.0.6
+// @version      2.0.7
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
 // @author       neoblackxt, LaneLau
 // @require      https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
@@ -283,6 +283,7 @@ function MTteamWaitPageLoadAndRun() {
     let tableBlured = false
     let T0Found = false
     let seedTableFound = false
+    // 页面局部刷新后重新判断 isMybonusPage
     isMybonusPage = window.location.toString().indexOf("mybonus") != -1
     let itv = setInterval(() => {
 
@@ -334,6 +335,6 @@ if (isMTeam) {
 
 var currentUrl = window.location.href;
 if (window.onurlchange === null) {
-    // feature is supported
+    // M-Team 页面局部刷新时重新运行函数
     window.addEventListener('urlchange', (info) => MTteamWaitPageLoadAndRun());
 }
