@@ -192,14 +192,14 @@ function run() {
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
         var size = $this.children('td:eq(' + i_S + ')').text().trim();
         var size_tp = 1;
-        var S = size.replace(/[KMGT]B/, function (tp) {
-            if (tp == "KB") {
+        var S = size.replace(/[KMGT]i?B/, function (tp) {
+            if (tp == "KB"|| tp == "KiB") {
                 size_tp = 1 / 1024 / 1024;
-            } else if (tp == "MB") {
+            } else if (tp == "MB" || tp == "MiB") {
                 size_tp = 1 / 1024;
-            } else if (tp == "GB") {
+            } else if (tp == "GB" || tp == "GiB") {
                 size_tp = 1;
-            } else if (tp == "TB") {
+            } else if (tp == "TB" || tp == "TiB") {
                 size_tp = 1024;
             }
             return "";
