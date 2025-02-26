@@ -33,6 +33,8 @@
 // @match        *://www.oshen.win/torrents*
 // @match        *://*.rousi.zip/torrents*
 // @match        *://*.kufei.org/torrents*
+// @match        *://*.tjupt.org/torrents*
+// @match        *://*.tjupt.org/bonus*
 // @match        *://*/mybonus*
 // @license      GPL License
 // @grant        GM_setValue
@@ -85,6 +87,7 @@ function run() {
 
         let A = isMTeam ? 0 : parseFloat($("div:contains(' (A = ')")[0].innerText.split(" = ")[1]);
         let B = isMTeam ? parseFloat($("td:contains('基本獎勵')+td+td")[0].innerText) : calcB(A);
+        // 剔除M-Team的基本奖励中做种数奖励
         if (isMTeam) {
             let matches = $("h5:contains('做種每小時將得到如下的魔力值')").next().children().first().text()
                 .match(/(\d+(\.\d+)?)個魔力值.*最多計(\d+)個/);
@@ -135,7 +138,6 @@ function run() {
                     return obj;
                 },
                 extraCssText: 'width: 170px'
-
             },
             xAxis: {
                 name: 'A',
@@ -179,20 +181,25 @@ function run() {
 
     function makeA($this, i_T, i_S, i_N) {
         var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
-        if (time == "") {
+        // 适配m-team的发生时间
+        if (time == undefined || time == "") {
             time = $this.children('td:eq(' + i_T + ')').find("span").text();
+        }
+        // 适配tjupt的发生时间
+        if (time == undefined || time == "") {
+            time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
         }
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
         var size = $this.children('td:eq(' + i_S + ')').text().trim();
         var size_tp = 1;
-        var S = size.replace(/[KMGT]B/, function (tp) {
-            if (tp == "KB") {
+        var S = size.replace(/[KMGT]i?B/, function (tp) {
+            if (tp == "KB"|| tp == "KiB") {
                 size_tp = 1 / 1024 / 1024;
-            } else if (tp == "MB") {
+            } else if (tp == "MB" || tp == "MiB") {
                 size_tp = 1 / 1024;
-            } else if (tp == "GB") {
+            } else if (tp == "GB" || tp == "GiB") {
                 size_tp = 1;
-            } else if (tp == "TB") {
+            } else if (tp == "TB" || tp == "TiB") {
                 size_tp = 1024;
             }
             return "";
@@ -318,6 +325,9 @@ let host = window.location.host.match(/\b[^\.]+\.[^\.]+$/)[0]
 let isMTeam = window.location.toString().indexOf("m-team") != -1
 let seedTableSelector = isMTeam ? 'div.mt-4>table>tbody>tr' : '.torrents:last-of-type>tbody>tr'
 let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
+if (window.location.toString().indexOf("tjupt.org") != -1) {
+    isMybonusPage = window.location.toString().indexOf("bonus.php") != -1
+}
 if (isMTeam) {
     if (isMybonusPage || window.location.toString().indexOf("browse") != -1) {
         MTteamWaitPageLoadAndRun()
