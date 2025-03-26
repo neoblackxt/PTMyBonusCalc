@@ -205,15 +205,23 @@ function run() {
             return "";
         });
         S = parseFloat(S) * size_tp;
-        var number = $this.children('td:eq(' + i_N + ')').text().trim();
+        //var number = $this.children('td:eq(' + i_N + ')').text().trim();
+        var number = $this.children('td:eq(' + i_N + ')').text().trim().replace(/,/g, ''); // 获取人数，删除多余符号
+        //console.log(number);
         var N = parseInt(number);
         var A = calcA(T, S, N).toFixed(2);
         var ave = (A / S).toFixed(2);
         if ((A > S * 2) && (N != 0)) {
-            //标红A大于体积2倍且不断种的种子
+            // 标红A大于体积2倍且不断种的种子
             return '<span style="color:#ff0000;font-weight:900;">' + A + '@' + ave + '</span>'
+        } else if ((A > S * 1.5) && (N != 0)) {
+            // 棕色A大于体积1.5倍
+            return '<span style="color:#8B4513;font-weight:800;">' + A + '@' + ave + '</span>' 
+        } else if ((A > S) && (N != 0)) {
+            // 蓝色A大于体积1倍
+            return '<span style="color:#00008B;font-weight:700;">' + A + '@' + ave + '</span>' 
         } else {
-            return '<span style="">' + A + '@' + ave + "</span>"
+            return '<span style="">' + A + '@' + ave + '</span>'
         }
     }
 
