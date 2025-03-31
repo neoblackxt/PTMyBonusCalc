@@ -58,22 +58,36 @@ function run() {
         }
     }
     if (isMybonusPage) {
-        T0 = parseInt($("li:has(b:contains('T0'))")[1].innerText.split(" = ")[1]);
-        N0 = parseInt($("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
-        B0 = parseInt($("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
-        L = parseInt($("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
-
-        GM_setValue(host + ".T0", T0);
-        GM_setValue(host + ".N0", N0);
-        GM_setValue(host + ".B0", B0);
-        GM_setValue(host + ".L", L);
+        
+        try {
+            T0 = parseInt($("li:has(b:contains('T0'))")[1].innerText.split(" = ")[1]);
+            N0 = parseInt($("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
+            B0 = parseInt($("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
+            L = parseInt($("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
+            console.log('数据提取成功:', T0, N0, B0, L);
+        } catch (error) {
+            console.error('数据提取过程中出现错误:', error);
+        }
 
         if (!argsReady) {
             if (T0 && N0 && B0 && L) {
+                argsReady = true
                 alert("魔力值参数已更新")
             } else {
-                alert("魔力值参数获取失败")
+                T0 = N0 = B0 = L = 0;
+                alert("魔力值参数获取失败,请将Tampermonkey的配置模式修改为高级后手动修改存储配置参数，详见说明文档")
             }
+
+            GM_setValue(host + ".T0", T0);
+            GM_setValue(host + ".N0", N0);
+            GM_setValue(host + ".B0", B0);
+            GM_setValue(host + ".L", L);
+
+        }
+
+        if (!argsReady) {
+            // 参数错误时不用继续计算了，否则会卡死页面
+            return
         }
 
         function calcB(A) {
