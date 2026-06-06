@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.2.0
+// @version      2.3.0
 // @description  在NexusPHP架构的PT站点显示每个种子的B值(时魔)、A值和每GB的A值。通用匹配，自动适配。
 // @author       neoblackxt, LaneLau
 // @require      https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
@@ -13,6 +13,8 @@
 //    *torrents* 覆盖 /torrents、/torrents.php、/xxx/torrents 等所有变体
 // @match        *://*/*torrents*
 // @match        *://*/*mybonus*
+//    *userdetails* 覆盖 /userdetails、/userdetails.php 等所有变体
+// @match        *://*/*userdetails*
 // === TJUPT 兼容（魔力值页面 URL 为 bonus.php） ===
 // @match        *://*/*bonus.php*
 // @license      GPL License
@@ -221,6 +223,17 @@ function run() {
         myChart.setOption(option);
     }
 
+    // ==================== 第2.5部分：用户详情页 — 监听做种表格并添加 B|A@A/GB ====================
+
+    if (isUserdetailsPage) {
+        if (argsReady) {
+            setupUserdetailsObserver();
+        } else {
+            alert("未找到魔力值参数，请先打开魔力值系统说明页面获取（/mybonus）");
+        }
+        return;
+    }
+
     // ==================== 第三部分：种子列表页 — 计算并显示 B|A@A/GB ====================
 
     /**
@@ -269,9 +282,9 @@ function run() {
         if (time == undefined || time == "") {
             time = $this.children('td:eq(' + i_T + ')').find("span").text();
         }
-        // 适配 TJUPT：时间格式使用 <br> 分隔
+        // 适配 TJUPT 和 userdetails 等：时间格式使用 <br> 分隔，或直接在 td 文本中
         if (time == undefined || time == "") {
-            time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
+            time = $this.children('td:eq(' + i_T + ')').html().replace(/<br\s*\/?>/gi, " ").trim();
         }
         // 将发布时间转换为周数
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
@@ -315,6 +328,128 @@ function run() {
             }
         });
         return textA;
+    }
+
+    // ---------------- 用户详情页（userdetails.php）：监听 AJAX 做种表格并添加 B|A@A/GB 列 ----------------
+    // 做种表格通过 AJAX 动态加载（点击"显示/隐藏"后触发），使用 MutationObserver 监听。
+
+    /**
+     * 为 userdetails 页面上的做种表格添加 B|A@A/GB 列。
+     *
+     * userdetails.php 中做种表格的表头结构与种子列表页不同：
+     *   - 没有 img.time 图标，时间列是纯文本 "col_added"
+     *   - 有 img.size 和 img.seeders 图标（与种子列表页相同）
+     *   - 数据行时间格式为 YYYY-MM-DD<br>HH:MM:SS
+     *
+     * 此函数通过图标识别 size 和 seeders 列，通过日期格式识别时间列。
+     *
+     * @param {jQuery} $table — 做种表格的 jQuery 对象（#ka1 table）
+     */
+    function addDataColUserdetailsTable($table) {
+        var i_T, i_S, i_N;
+        var $rows = $table.find('tr');
+
+        if ($rows.length < 2) return;  // 至少需要表头 + 一行数据
+
+        // 第一步：通过图标识别种子大小列和做种人数列
+        $rows.first().children('td').each(function (col) {
+            if ($(this).find('img.size').length) {
+                i_S = col;
+            } else if ($(this).find('img.seeders').length) {
+                i_N = col;
+            }
+        });
+
+        if (i_S === undefined || i_N === undefined) {
+            console.log('[PTMyBonusCalc] 无法识别 userdetails 做种表格的 size/seeders 列，跳过。');
+            return;
+        }
+
+        // 第二步：通过数据行中的日期格式识别时间列（格式：YYYY-MM-DD）
+        $rows.each(function (row) {
+            if (row === 0) return;  // 跳过表头
+            var $this = $(this);
+            $this.children('td').each(function (col) {
+                if ($(this).text().match(/\d{4}-\d{2}-\d{2}/)) {
+                    i_T = col;
+                    return false;  // break inner loop
+                }
+            });
+            if (i_T !== undefined) return false;  // break outer loop
+        });
+
+        if (i_T === undefined) {
+            console.log('[PTMyBonusCalc] 无法识别 userdetails 做种表格的时间列，跳过。');
+            return;
+        }
+
+        // 第三步：检查是否已经添加过 B|A@A/GB 列（翻页时表格内容被替换，需重新添加）
+        var $headerLastTd = $rows.first().children('td:last');
+        var alreadyAdded = $headerLastTd.text().indexOf('B|A@A/GB') !== -1;
+
+        if (!alreadyAdded) {
+            // 首次添加：在表头最后一列前插入 B|A@A/GB 列标题
+            $rows.first().children("td:last").before(
+                '<td class="colhead" align="center" title="时魔|A值@每GB的A值">B|A@A/GB</td>'
+            );
+        }
+
+        // 第四步：为每行数据计算并插入 B|A@A/GB
+        $rows.each(function (row) {
+            if (row === 0) return;  // 跳过表头
+            var $this = $(this);
+            var textA = makeA($this, i_T, i_S, i_N);
+            if (alreadyAdded) {
+                // 翻页更新：只替换内容
+                $this.children("td:last").html(textA);
+            } else {
+                // 首次添加：插入新列
+                $this.children("td:last").before('<td class="rowfollow" align="center">' + textA + '</td>');
+            }
+        });
+    }
+
+    /**
+     * 设置 MutationObserver 监听 userdetails 页面做种表格容器的 DOM 变化。
+     *
+     * 做种表格包裹在 div#ka1[data-type='seeding'] 中，初始为 display:none 且空内容。
+     * 用户点击"显示/隐藏"后 AJAX 加载表格，翻页时也会替换表格内容。
+     * Observer 监听 #ka1 的子节点变化，当检测到 <table> 元素时进行处理。
+     */
+    function setupUserdetailsObserver() {
+        var $container = $('#ka1');
+        if (!$container.length) {
+            console.log('[PTMyBonusCalc] 未找到做种表格容器 #ka1');
+            return;
+        }
+
+        // 如果表格已存在（页面已展开），立即处理
+        var $existingTable = $container.find('table');
+        if ($existingTable.length) {
+            addDataColUserdetailsTable($existingTable);
+        }
+
+        // 使用 MutationObserver 监听后续的 AJAX 加载和翻页
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    // 查找新增节点中的表格
+                    mutation.addedNodes.forEach(function (node) {
+                        if (node.tagName === 'TABLE') {
+                            addDataColUserdetailsTable($(node));
+                        } else if (node.querySelectorAll) {
+                            var $tables = $(node).find('table');
+                            $tables.each(function () {
+                                addDataColUserdetailsTable($(this));
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe($container[0], { childList: true, subtree: true });
+        console.log('[PTMyBonusCalc] userdetails 做种表格监听已启动');
     }
 
     // ---------------- 通用站点（NexusPHP架构）：添加 B|A@A/GB 列 ----------------
@@ -483,6 +618,9 @@ let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
 if (window.location.toString().indexOf("tjupt.org") != -1) {
     isMybonusPage = window.location.toString().indexOf("bonus.php") != -1
 }
+
+// 检测是否在用户详情页面（userdetails.php）
+let isUserdetailsPage = window.location.toString().indexOf("userdetails") != -1
 
 // M-Team 仅在 mybonus 或 browse 页面运行（其他页面无种子列表）
 if (isMTeam) {
