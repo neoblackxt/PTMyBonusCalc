@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.3.0
+// @version      2.3.1
 // @description  在NexusPHP架构的PT站点显示每个种子的B值(时魔)、A值和每GB的A值。通用匹配，自动适配。
 // @author       neoblackxt, LaneLau
 // @require      https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
@@ -79,32 +79,43 @@ function run() {
 
     // 在魔力值说明页：从页面 DOM 中提取参数并持久化存储
     if (isMybonusPage) {
-        try {
-            // 从页面中的列表项提取四个关键参数
-            T0 = parseInt($("li:has(b:contains('T0'))")[1].innerText.split(" = ")[1]);
-            N0 = parseInt($("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
-            B0 = parseInt($("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
-            L = parseInt($("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
-            console.log('数据提取成功:', T0, N0, B0, L);
-        } catch (error) {
-            console.error('数据提取过程中出现错误:', error);
-        }
-
-        if (!argsReady) {
-            if (T0 && N0 && B0 && L) {
-                argsReady = true
-                alert("魔力值参数已更新")
-            } else {
-                // 参数提取失败，写入默认值 0 防止后续卡死
-                T0 = N0 = B0 = L = 0;
-                alert("魔力值参数获取失败,请将Tampermonkey的配置模式修改为高级后手动修改存储配置参数，详见说明文档")
+        // 检查该站点是否已被标记为"无法自动获取参数"
+        let bonusBlocked = GM_getValue(host + ".bonus_blocked");
+        if (bonusBlocked) {
+            // 已标记：跳过自动提取，避免反复弹出错误提示
+            // 用户可手动在 Tampermonkey 存储中配置 T0/N0/B0/L 后删除 bonus_blocked 键
+            console.log('[PTMyBonusCalc] 该站点已标记为无法自动获取魔力值参数，跳过。');
+        } else {
+            try {
+                // 从页面中的列表项提取四个关键参数
+                T0 = parseInt($("li:has(b:contains('T0'))")[1].innerText.split(" = ")[1]);
+                N0 = parseInt($("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
+                B0 = parseInt($("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
+                L = parseInt($("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
+                console.log('数据提取成功:', T0, N0, B0, L);
+            } catch (error) {
+                console.error('数据提取过程中出现错误:', error);
             }
 
-            // 持久化存储参数，下次访问种子列表页时可直接使用
-            GM_setValue(host + ".T0", T0);
-            GM_setValue(host + ".N0", N0);
-            GM_setValue(host + ".B0", B0);
-            GM_setValue(host + ".L", L);
+            if (!argsReady) {
+                if (T0 && N0 && B0 && L) {
+                    argsReady = true
+                    alert("魔力值参数已更新")
+                    // 提取成功，清除可能存在的 blocked 标记
+                    GM_setValue(host + ".bonus_blocked", false);
+                } else {
+                    // 参数提取失败：标记站点，后续不再自动提取
+                    T0 = N0 = B0 = L = 0;
+                    GM_setValue(host + ".bonus_blocked", true);
+                    alert("魔力值参数获取失败,该站点已记录，后续不再自动获取。请将Tampermonkey的配置模式修改为高级后手动修改存储配置参数，详见说明文档")
+                }
+
+                // 持久化存储参数，下次访问种子列表页时可直接使用
+                GM_setValue(host + ".T0", T0);
+                GM_setValue(host + ".N0", N0);
+                GM_setValue(host + ".B0", B0);
+                GM_setValue(host + ".L", L);
+            }
         }
 
         if (!argsReady) {
