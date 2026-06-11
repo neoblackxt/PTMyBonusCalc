@@ -59,4 +59,6 @@ https://github.com/neoblackxt/PTMyBonusCalc/issues
 
 ### 开源协议
 
-GPL v3
+本项目采用 [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)（GPL-3.0）开源协议发布。
+
+根据该协议，您可以自由地使用、修改和分发本项目的源代码，但任何基于本项目修改或衍生的作品也必须以 GPL-3.0 协议开源。有关完整的许可条款，请参阅 [LICENSE](LICENSE) 文件或访问 [GNU 官方网站](https://www.gnu.org/licenses/gpl-3.0.html)。
