@@ -41,6 +41,16 @@
 // @match        *://*.tjupt.org/torrents*
 // @match        *://*.tjupt.org/bonus*
 // @match        *://*/mybonus*
+// @exclude      *://qingwapt.com/*
+// @exclude      *://*.qingwapt.com/*
+// @exclude      *://audiences.me/*
+// @exclude      *://*.audiences.me/*
+// @exclude      *://hdarea.club/*
+// @exclude      *://*.hdarea.club/*
+// @exclude      *://hhanclub.net/*
+// @exclude      *://*.hhanclub.net/*
+// @exclude      *://monikadesign.uk/*
+// @exclude      *://*.monikadesign.uk/*
 // @license      GPL License
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -55,6 +65,21 @@ const colorsOfAVE = [
     {min: 1.5, max: 2, color: '#8B4513', fontWeight: 800}, // 棕色
     {min: 2, max: Infinity, color: '#ff0000', fontWeight: 900} // 红色
 ]
+
+function getSiteKey() {
+    return (window.location.hostname || window.location.host || '').replace(/^www\./, '')
+}
+
+function getLegacySiteKey() {
+    let match = (window.location.host || '').match(/\b[^\.]+\.[^\.]+$/)
+    return match ? match[0] : getSiteKey()
+}
+
+function isIgnoredSite() {
+    let hostname = getSiteKey()
+    let ignoredHosts = ['qingwapt.com', 'audiences.me', 'hdarea.club', 'hhanclub.net', 'monikadesign.uk']
+    return ignoredHosts.some(site => hostname === site || hostname.endsWith('.' + site))
+}
 
 const siteInfo = [
     {
@@ -678,13 +703,16 @@ function mTeamWaitPageLoadAndRun() {
     bodyObserver.observe(document, {childList: true, subtree: true});
 }
 
-let host = window.location.host.match(/\b[^\.]+\.[^\.]+$/)[0]
+let host = getSiteKey()
+let legacyHost = getLegacySiteKey()
 let isMTeam = window.location.toString().indexOf("m-team") != -1
 let mTeamUrl
 let seedTableHeaderSelector = '.torrents:last-of-type>thead>tr';
 let seedTableSelector = isMTeam ? 'div.ant-spin-container:not(.ant-spin-blur)>div.mt-4>table>tbody>tr' : '.torrents:last-of-type>tbody>tr'
 let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
-if (isMTeam) {
+if (isIgnoredSite()) {
+    // skip ignored sites
+} else if (isMTeam) {
     if (isMybonusPage || window.location.toString().indexOf("browse") != -1) {
         mTeamUrl = window.location.toString()
         mTeamWaitPageLoadAndRun()
