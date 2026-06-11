@@ -378,6 +378,87 @@ function isMybonusParamPage() {
     return /\/mybonus(?:\.php)?(?:[?#/]|$)/i.test(window.location.pathname)
 }
 
+const formulaProfiles = {
+    default: {
+        name: 'NexusPHP',
+        requiredParams: ['T0', 'N0', 'B0', 'L'],
+        supportsBonusChart: true,
+        columnTitle: 'A@A/GB',
+        columnTip: 'A值@每GB的A值',
+        calcA: function (T, S, N, rowText, params) {
+            var c1 = 1 - Math.pow(10, -(T / params.T0));
+            N = N ? N : 1;
+            var c2 = 1 + Math.pow(2, .5) * Math.pow(10, -(N - 1) / (params.N0 - 1));
+            return c1 * S * c2;
+        },
+        calcB: function (A, params) {
+            return params.B0 * (2 / Math.PI) * Math.atan(A / params.L)
+        }
+    },
+    audiences: {
+        name: 'Audiences',
+        requiredParams: ['T0', 'N0', 'L'],
+        supportsBonusChart: false,
+        columnTitle: 'A@A/GB',
+        columnTip: '含官组/普通权重的A值@每GB的A值',
+        calcA: function (T, S, N, rowText, params) {
+            N = N ? N : 1;
+            let adjustedSize = S;
+            if (rowText.indexOf('零魔') !== -1) {
+                if (N >= 10) {
+                    return 0;
+                }
+                adjustedSize = S / 5;
+            }
+            let weight = /官组|官組|官方/.test(rowText) ? 1.5 : 0.5;
+            let c1 = 1 - Math.pow(10, -(T / params.T0));
+            let c2 = 1 + Math.pow(2, .5) * Math.pow(10, -(N - 1) / (params.N0 - 1));
+            return c1 * adjustedSize * c2 * weight;
+        }
+    },
+    hdarea: {
+        name: 'HDArea v2',
+        requiredParams: [],
+        supportsBonusChart: false,
+        columnTitle: 'Score@Score/GB',
+        columnTip: 'HDArea新版算法单种预估分@每GB预估分，未扣除全局上限',
+        calcA: function (T, S, N) {
+            N = N ? N : 1;
+            let countScore = S > 5 ? 1 : 0;
+            let scarcityScore = S * (1 + Math.max(T, 0) * 0.02) * (1 + 1 / N) * 0.05;
+            return countScore + scarcityScore;
+        }
+    },
+    hhanclub: {
+        name: 'HHANClub',
+        requiredParams: [],
+        supportsBonusChart: false,
+        disableTorrentCalc: true,
+        unsupportedMessage: 'HHANClub魔力页未提供完整基础公式参数，暂不计算单种A值，避免显示错误结果。'
+    }
+}
+
+function getFormulaProfile() {
+    if (host === 'audiences.me') {
+        return formulaProfiles.audiences
+    }
+    if (host === 'hdarea.club') {
+        return formulaProfiles.hdarea
+    }
+    if (host === 'hhanclub.net') {
+        return formulaProfiles.hhanclub
+    }
+    return formulaProfiles.default
+}
+
+function areParamsReady(profile, params) {
+    return profile.requiredParams.every(name => Number.isFinite(params[name]) && params[name] !== 0)
+}
+
+function getCurrentParams(T0, N0, B0, L) {
+    return {T0: Number(T0), N0: Number(N0), B0: Number(B0), L: Number(L)}
+}
+
 const siteInfo = [
     {
         name: "tjupt",
