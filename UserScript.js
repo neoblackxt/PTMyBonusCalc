@@ -325,6 +325,59 @@ function isIgnoredSite() {
     return ignoredHosts.some(site => hostname === site || hostname.endsWith('.' + site))
 }
 
+function extractBonusParam(text, name, allowLoose = true) {
+    if (!text) {
+        return undefined
+    }
+    let normalized = text.replace(/\s+/g, ' ')
+    let escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    let strictReg = new RegExp('(?:^|[^A-Za-z0-9])' + escapedName + '(?![A-Za-z0-9])\\s*(?:=|:|：)\\s*(\\d+(?:\\.\\d+)?)', 'i')
+    let strictMatch = normalized.match(strictReg)
+    if (strictMatch) {
+        return parseFloat(strictMatch[1])
+    }
+
+    if (!allowLoose || normalized.length > 120) {
+        return undefined
+    }
+    let looseReg = new RegExp('(?:^|[^A-Za-z0-9])' + escapedName + '(?![A-Za-z0-9])\\s+(\\d+(?:\\.\\d+)?)', 'i')
+    let looseMatch = normalized.match(looseReg)
+    return looseMatch ? parseFloat(looseMatch[1]) : undefined
+}
+
+function getBonusParamFromPage(name) {
+    let nodes = document.querySelectorAll('li, div, p, span, td, th, tr')
+    for (let node of nodes) {
+        let value = extractBonusParam(node.innerText, name)
+        if (Number.isFinite(value)) {
+            return value
+        }
+    }
+    return extractBonusParam(document.body ? document.body.innerText : '', name, false)
+}
+
+function getBonusParamsFromPage() {
+    return {
+        T0: getBonusParamFromPage('T0'),
+        N0: getBonusParamFromPage('N0'),
+        B0: getBonusParamFromPage('B0'),
+        L: getBonusParamFromPage('L')
+    }
+}
+
+function parseFirstNumber(text) {
+    let match = (text || '').replace(/,/g, '').match(/\d+(?:\.\d+)?/)
+    return match ? parseFloat(match[0]) : undefined
+}
+
+function isBonusParamPage() {
+    return /\/(?:mybonus|bonus)(?:\.php)?(?:[?#/]|$)/i.test(window.location.pathname)
+}
+
+function isMybonusParamPage() {
+    return /\/mybonus(?:\.php)?(?:[?#/]|$)/i.test(window.location.pathname)
+}
+
 const siteInfo = [
     {
         name: "tjupt",
