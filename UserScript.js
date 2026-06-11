@@ -285,6 +285,7 @@
 // @match        *://*.tjupt.org/torrents*
 // @match        *://*.tjupt.org/bonus*
 // @match        *://*/mybonus*
+// @match        *://*/*userdetails*
 // @exclude      *://qingwapt.com/*
 // @exclude      *://*.qingwapt.com/*
 // @exclude      *://audiences.me/*
@@ -638,6 +639,20 @@ function run() {
         drawChart(bonusParams);
     } else if (window.location.href.includes(site.torrentListPage)) {
         addDataCol()
+    } else if (isUserdetailsPage) {
+        let T0 = GM_getValue(site.name + ".T0");
+        let N0 = GM_getValue(site.name + ".N0");
+        let B0 = GM_getValue(site.name + ".B0");
+        let L = GM_getValue(site.name + ".L");
+        if (T0 && N0 && B0 && L) {
+            setupUserdetailsObserver();
+        } else {
+            Toastify({
+                text: "未找到魔力值参数，请先打开魔力值系统说明页面获取（/mybonus）",
+                duration: 3000,
+                close: true
+            }).showToast();
+        }
     }
 }
 
@@ -656,6 +671,9 @@ function getActiveSeed() {
         return parseInt($("div.ant-space-item:nth-child(8) > span:nth-child(1) > span:nth-child(3)")[0].innerText);
     } else {
         let infoTdHtml = $("span:contains('活动种子'), span:contains('当前活动')").parent().html();
+        if (!infoTdHtml) {
+            return -1;
+        }
         let match = infoTdHtml.match(/(?:活动种子|当前活动)[:：]<\/span>\s*<img.*>(\d+)\s*<img.*>(\d+)/);
         if (match && match.length > 2) {
             return parseInt(match[1]);
@@ -743,6 +761,86 @@ function getParamsFromFetch() {
     }
 }
 
+
+function calcA(T, S, N, rowText) {
+    let formulaProfile = getFormulaProfile();
+    let siteName = site.name;
+    let T0 = GM_getValue(siteName + ".T0");
+    let N0 = GM_getValue(siteName + ".N0");
+    let B0 = GM_getValue(siteName + ".B0");
+    let L = GM_getValue(siteName + ".L");
+    let currentParams = getCurrentParams(T0, N0, B0, L);
+    if (!areParamsReady(formulaProfile, currentParams)) {
+        return 0;
+    }
+    return formulaProfile.calcA(T, S, N, rowText || '', currentParams);
+}
+
+/**
+ *
+ * @param $this 种子的每一行
+ * @param i_T 种子发布时间所在列
+ * @param i_S 种子体积所在列
+ * @param i_N 做种人数人数所在列
+ */
+function makeA($this, i_T, i_S, i_N) {
+    var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
+    // 适配m-team的发生时间
+    if (time == undefined || time == "") {
+        time = $this.children('td:eq(' + i_T + ')').find("span").text();
+    }
+    // 适配tjupt的发生时间
+    if (time == undefined || time == "") {
+        time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
+    }
+    var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
+    var size = $this.children('td:eq(' + i_S + ')').text().trim();
+    var size_tp = 1;
+    var S = size.replace(/[KMGT]i?B/, function (tp) {
+        if (tp == "KB" || tp == "KiB") {
+            size_tp = 1 / 1024 / 1024;
+        } else if (tp == "MB" || tp == "MiB") {
+            size_tp = 1 / 1024;
+        } else if (tp == "GB" || tp == "GiB") {
+            size_tp = 1;
+        } else if (tp == "TB" || tp == "TiB") {
+            size_tp = 1024;
+        }
+        return "";
+    });
+    S = parseFloat(S) * size_tp;
+    var number = $this.children('td:eq(' + i_N + ')').text().trim().replace(/,/g, ''); // 获取人数，删除多余符号
+    var N = parseInt(number);
+    var rowText = $this.text();
+    var A = calcA(T, S, N, rowText);
+    var ave = (A / S).toFixed(2);
+    // tjupt的"魔力值详情"页面可以看到当前做种种子的A值，比对发现带"保种"标签种子的A值是公式计算A值的5倍
+    if (site.name === "tjupt" && $this.find(".tag-keepseed").length !== 0) {
+        A = 5 * A;
+    }
+    return {a: A, ave: ave, s: S};
+}
+
+function makeTextAve(ave) {
+    for (const config of colorsOfAVE) {
+        if (ave >= config.min && ave < config.max) {
+            if (config.color || config.fontWeight) {
+                const styles = [];
+                if (config.color) {
+                    styles.push('color: ' + config.color + ';');
+                }
+                if (config.fontWeight) {
+                    styles.push('font-weight: ' + config.fontWeight + ';');
+                }
+                const styleString = styles.join('');
+                return '<span style="' + styleString + '">' + ave + '</span>';
+            }
+            return '<span>' + ave + '</span>';
+        }
+    }
+    return '<span>' + ave + '</span>';
+}
+
 function addDataCol() {
 
     let formulaProfile = getFormulaProfile();
@@ -763,78 +861,7 @@ function addDataCol() {
         return;
     }
 
-    function calcA(T, S, N, rowText) {
-        return formulaProfile.calcA(T, S, N, rowText || '', currentParams);
-    }
-
-    /**
-     *
-     * @param $this 种子的每一行
-     * @param i_T 种子发布时间所在列
-     * @param i_S 种子体积所在列
-     * @param i_N 做种人数人数所在列
-     */
-    function makeA($this, i_T, i_S, i_N) {
-        var time = $this.children('td:eq(' + i_T + ')').find("span").attr("title");
-        // 适配m-team的发生时间
-        if (time == undefined || time == "") {
-            time = $this.children('td:eq(' + i_T + ')').find("span").text();
-        }
-        // 适配tjupt的发生时间
-        if (time == undefined || time == "") {
-            time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
-        }
-        var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
-        var size = $this.children('td:eq(' + i_S + ')').text().trim();
-        var size_tp = 1;
-        var S = size.replace(/[KMGT]i?B/, function (tp) {
-            if (tp == "KB" || tp == "KiB") {
-                size_tp = 1 / 1024 / 1024;
-            } else if (tp == "MB" || tp == "MiB") {
-                size_tp = 1 / 1024;
-            } else if (tp == "GB" || tp == "GiB") {
-                size_tp = 1;
-            } else if (tp == "TB" || tp == "TiB") {
-                size_tp = 1024;
-            }
-            return "";
-        });
-        S = parseFloat(S) * size_tp;
-        //var number = $this.children('td:eq(' + i_N + ')').text().trim();
-        var number = $this.children('td:eq(' + i_N + ')').text().trim().replace(/,/g, ''); // 获取人数，删除多余符号
-        //console.log(number);
-        var N = parseInt(number);
-        var rowText = $this.text();
-        var A = calcA(T, S, N, rowText);
-        var ave = (A / S).toFixed(2);
-        // tjupt的“魔力值详情”页面可以看到当前做种种子的A值，比对发现带“保种”标签种子的A值是公式计算A值的5倍
-        if (site.name === "tjupt" && $this.find(".tag-keepseed").length !== 0) {
-            A = 5 * A;
-        }
-        return {a: A, ave: ave, s: S};
-    }
-
-    function makeTextAve(ave) {
-        for (const config of colorsOfAVE) {
-            if (ave >= config.min && ave < config.max) {
-                if (config.color || config.fontWeight) {
-                    const styles = [];
-                    if (config.color) {
-                        styles.push(`color: ${config.color};`);
-                    }
-                    if (config.fontWeight) {
-                        styles.push(`font-weight: ${config.fontWeight};`);
-                    }
-                    const styleString = styles.join('');
-                    return `<span style="${styleString}">${ave}</span>`;
-                }
-                return `<span>${ave}</span>`;
-            }
-        }
-        return `<span>${ave}</span>`;
-    }
-
-    let nowA = GM_getValue(site.name + ".a");
+        let nowA = GM_getValue(site.name + ".a");
     let hasNowA = !isNaN(nowA);
     let aHeadText = hasNowA ? "时魔" : "A";
     let aTitle = hasNowA ? "当前做种状态下每小时可以获得的魔力值" : "A值";
@@ -1068,6 +1095,99 @@ function addDataCol() {
     }
 }
 
+function addDataColUserdetailsTable($table) {
+    var i_T, i_S, i_N;
+    var $rows = $table.find('tr');
+
+    if ($rows.length < 2) return;
+
+    $rows.first().children('td').each(function (col) {
+        if ($(this).find('img.size').length) {
+            i_S = col;
+        } else if ($(this).find('img.seeders').length) {
+            i_N = col;
+        }
+    });
+
+    if (i_S === undefined || i_N === undefined) {
+        console.log('[PTMyBonusCalc] 无法识别 userdetails 做种表格的 size/seeders 列，跳过。');
+        return;
+    }
+
+    $rows.each(function (row) {
+        if (row === 0) return;
+        $(this).children('td').each(function (col) {
+            if ($(this).text().match(/\d{4}-\d{2}-\d{2}/)) {
+                i_T = col;
+                return false;
+            }
+        });
+        if (i_T !== undefined) return false;
+    });
+
+    if (i_T === undefined) {
+        console.log('[PTMyBonusCalc] 无法识别 userdetails 做种表格的时间列，跳过。');
+        return;
+    }
+
+    var alreadyAdded = $rows.first().find('#calcTHeadA').length > 0;
+
+    if (!alreadyAdded) {
+        $rows.first().children("td:last").before(
+            '<td class="colhead" align="center" title="A值" id="calcTHeadA">A</td>',
+            '<td class="colhead" align="center" title="每GB的A值" id="calcTHeadAve">A/GB</td>'
+        );
+    }
+
+    $rows.each(function (row) {
+        if (row === 0) return;
+        var $this = $(this);
+        var result = makeA($this, i_T, i_S, i_N);
+        var textAve = makeTextAve(result.ave);
+        if (alreadyAdded) {
+            $this.children("td:nth-last-child(2)").html(result.a.toFixed(2));
+            $this.children("td:last").html(textAve);
+        } else {
+            $this.children("td:last").before(
+                '<td class="rowfollow" align="center">' + result.a.toFixed(2) + '</td>',
+                '<td class="rowfollow" align="center">' + textAve + '</td>'
+            );
+        }
+    });
+}
+
+function setupUserdetailsObserver() {
+    var $container = $('#ka1');
+    if (!$container.length) {
+        console.log('[PTMyBonusCalc] 未找到做种表格容器 #ka1');
+        return;
+    }
+
+    var $existingTable = $container.find('table');
+    if ($existingTable.length) {
+        addDataColUserdetailsTable($existingTable);
+    }
+
+    var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.tagName === 'TABLE') {
+                        addDataColUserdetailsTable($(node));
+                    } else if (node.querySelectorAll) {
+                        $(node).find('table').each(function () {
+                            addDataColUserdetailsTable($(this));
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    observer.observe($container[0], { childList: true, subtree: true });
+    console.log('[PTMyBonusCalc] userdetails 做种表格监听已启动');
+}
+
 function mTeamWaitPageLoadAndRun() {
     let $ = jQuery;
     let contentObserver = new MutationObserver((mutationsList, observer) => {
@@ -1095,6 +1215,7 @@ let mTeamUrl
 let seedTableHeaderSelector = '.torrents:last-of-type>thead>tr';
 let seedTableSelector = isMTeam ? 'div.ant-spin-container:not(.ant-spin-blur)>div.mt-4>table>tbody>tr' : '.torrents:last-of-type>tbody>tr'
 let isMybonusPage = isBonusParamPage()
+let isUserdetailsPage = window.location.toString().indexOf("userdetails") != -1
 if (isIgnoredSite()) {
     // skip ignored sites
 } else if (isMTeam) {
