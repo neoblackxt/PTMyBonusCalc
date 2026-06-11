@@ -311,6 +311,14 @@ const colorsOfAVE = [
     {min: 2, max: Infinity, color: '#ff0000', fontWeight: 900} // 红色
 ]
 
+// 时魔/GB 的着色阈值（数值范围比 A/GB 小，阈值更宽松）
+const colorsOfNowA = [
+    {min: 0, max: 0.2, color: null, fontWeight: null},      // 黑色
+    {min: 0.2, max: 0.5, color: '#00008B', fontWeight: 700}, // 蓝色
+    {min: 0.5, max: 1, color: '#8B4513', fontWeight: 800},   // 棕色
+    {min: 1, max: Infinity, color: '#ff0000', fontWeight: 900} // 红色
+]
+
 function getSiteKey() {
     return (window.location.hostname || window.location.host || '').replace(/^www\./, '')
 }
@@ -844,8 +852,9 @@ function makeA($this, i_T, i_S, i_N) {
     return {a: A, ave: ave, s: S};
 }
 
-function makeTextAve(ave) {
-    for (const config of colorsOfAVE) {
+function makeTextAve(ave, colorConfig) {
+    colorConfig = colorConfig || colorsOfAVE;
+    for (const config of colorConfig) {
         if (ave >= config.min && ave < config.max) {
             if (config.color || config.fontWeight) {
                 const styles = [];
@@ -920,7 +929,7 @@ function addDataCol() {
                 if (hasNowA) {
                     let deltaB = calcDeltaB(a);
                     let deltaBPerGB = deltaB / s;
-                    let textDeltaBPerGB = makeTextAve(deltaBPerGB.toFixed(2));
+                    let textDeltaBPerGB = makeTextAve(deltaBPerGB.toFixed(2), colorsOfNowA);
                     if (addFlag) {
                         const colA = $this.children(":nth-last-child(3)");
                         const colAve = $this.children(":nth-last-child(2)");
@@ -1014,7 +1023,7 @@ function addDataCol() {
                     'align="center" data-from-calc="true" data-calc-a="' + deltaB + '" title="A: ' +
                     a.toFixed(2) + '">' + deltaB.toFixed(2) + '</td>';
                 textA = deltaB.toFixed(2);
-                textAve = makeTextAve(deltaBPerGB.toFixed(2));
+                textAve = makeTextAve(deltaBPerGB.toFixed(2), colorsOfNowA);
                 tdTextAve = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
                     'align="center" data-from-calc="true" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' +
                     ave + '">' + textAve + '</td>';

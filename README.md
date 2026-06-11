@@ -4,9 +4,9 @@
 
 ### 功能
 
-在种子界面增加一列显示该种子当前的**时魔**和每GB的**时魔**，后者表征对磁盘空间利用的性价比。如果每GB的时魔超过2会被自动<span style="color:#ff0000;font-weight:900;">标红</span>，超过1.5<span style="color:#8B4513;font-weight:800;">标棕</span>，超过1<span style="color:#00008B;font-weight:700;">标蓝</span>，1以下不变。
+在种子界面增加一列显示该种子当前的**时魔**和每GB的**时魔**，后者表征对磁盘空间利用的性价比。时魔/GB 的着色阈值如下：超过 1 会被自动<span style="color:#ff0000;font-weight:900;">标红</span>，超过 0.5 <span style="color:#8B4513;font-weight:800;">标棕</span>，超过 0.2 <span style="color:#00008B;font-weight:700;">标蓝</span>，0.2 以下不变。
 
-当站点无法获取时魔参数时，回退显示**A值**和**每GB的A值**。
+当站点无法获取时魔参数时，回退显示**A值**和**每GB的A值**，此时采用 A/GB 的着色阈值：超过 2 红、超过 1.5 棕、超过 1 蓝、1 以下不变。
 
 如果你此时新加入到该种子的做种者，实际A值会稍稍低于当前显示A值。
 
