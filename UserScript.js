@@ -1,16 +1,10 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.1.0
+// @version      2.2.0
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
 // @author       neoblackxt, LaneLau
-// @require      https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js
-// @require      https://cdn.jsdelivr.net/npm/toastify-js
-// @require      https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js
-// @resource     TOASTIFY_CSS https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css
-// @grant        GM_addStyle
-// @grant        GM_getResourceText
+// @license      GPL-3.0
 // @match        *://kp.m-team.cc/*
 // @match        *://13city.org/torrents*
 // @match        *://*.13city.org/torrents*
@@ -296,7 +290,13 @@
 // @exclude      *://*.hhanclub.net/*
 // @exclude      *://monikadesign.uk/*
 // @exclude      *://*.monikadesign.uk/*
-// @license      GPL License
+// @require      https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
+// @require      https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js
+// @require      https://cdn.jsdelivr.net/npm/toastify-js
+// @require      https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js
+// @resource     TOASTIFY_CSS https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css
+// @grant        GM_addStyle
+// @grant        GM_getResourceText
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        window.onurlchange
