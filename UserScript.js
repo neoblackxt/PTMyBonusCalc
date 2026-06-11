@@ -919,18 +919,20 @@ function addDataCol() {
                 let textAve = makeTextAve(ave);
                 if (hasNowA) {
                     let deltaB = calcDeltaB(a);
+                    let deltaBPerGB = deltaB / s;
+                    let textDeltaBPerGB = makeTextAve(deltaBPerGB.toFixed(2));
                     if (addFlag) {
                         const colA = $this.children(":nth-last-child(3)");
                         const colAve = $this.children(":nth-last-child(2)");
                         colA.html(deltaB.toFixed(2));
                         colA.attr('title', 'A: ' + a.toFixed(2));
-                        colAve.html((deltaB / s).toFixed(2));
+                        colAve.html(textDeltaBPerGB);
                         colAve.attr('title', 'A/GB: ' + ave);
                     } else {
                         $this.children("td:last").before('<td class="rowfollow" data-calc-a="' + deltaB + '" ' +
                             'title="A: ' + a.toFixed(2) + '">' + deltaB.toFixed(2) + '</td>',
-                            '<td class="rowfollow" data-calc-ave="' + deltaB / s + '" title="A/GB: ' + ave + '">'
-                            + (deltaB / s).toFixed(2) + '</td>');
+                            '<td class="rowfollow" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' + ave + '">'
+                            + textDeltaBPerGB + '</td>');
                     }
                 } else {
                     $this.children("td:last").before('<td class="rowfollow" data-calc-a="' + a +
@@ -1007,13 +1009,14 @@ function addDataCol() {
             let tdTextA, tdTextAve, textAve, textA;
             if (hasNowA) {
                 let deltaB = calcDeltaB(a);
+                let deltaBPerGB = deltaB / s;
                 tdTextA = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
                     'align="center" data-from-calc="true" data-calc-a="' + deltaB + '" title="A: ' +
                     a.toFixed(2) + '">' + deltaB.toFixed(2) + '</td>';
                 textA = deltaB.toFixed(2);
-                textAve = (deltaB / s).toFixed(2);
+                textAve = makeTextAve(deltaBPerGB.toFixed(2));
                 tdTextAve = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
-                    'align="center" data-from-calc="true" data-calc-ave="' + (deltaB / s) + '" title="A/GB: ' +
+                    'align="center" data-from-calc="true" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' +
                     ave + '">' + textAve + '</td>';
             } else {
                 // data-from-calc用于判断该元素是否由脚本生成
