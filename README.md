@@ -25,6 +25,16 @@
 
 首次使用须打开各站的魔力值公式或商店页面获取公式参数，否则无法计算。参数保存在管理面板->已安装脚本->本脚本->编辑->存储。 [图文说明](https://github.com/neoblackxt/PTMyBonusCalc/issues/6)
 
+### 支持范围与适配说明
+
+当前脚本已将 [PT监护室](https://savept.icu/) 中标记为"健康"的 140 个 PT 站点加入匹配规则，并同时覆盖主域名和子域名的 `torrents*` 页面。
+
+需要注意：加入匹配规则只代表脚本会在这些站点页面注入，不代表每个站点都已经完成表格结构适配。普通站点仍主要按 NexusPHP 类种子列表解析；如果站点使用了非标准表格、前端重构页面、不同的时间/体积/做种人数列结构，可能需要单独适配。
+
+`qingwapt.com`、`audiences.me`、`hdarea.club`、`hhanclub.net`、`monikadesign.uk` 已被排除，不启用脚本功能。
+
+如果某个站点的 `/mybonus.php` 页面无法解析出公式参数，脚本会把该站记录为不兼容站点，后续默认不再启用功能。
+
 ### 参与开发
 
 https://github.com/neoblackxt/PTMyBonusCalc

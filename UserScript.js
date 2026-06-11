@@ -356,7 +356,7 @@ function getBonusParamFromPage(name) {
     return extractBonusParam(document.body ? document.body.innerText : '', name, false)
 }
 
-function getBonusParamsFromPage() {
+function getParamsFromBonusPageFallback() {
     return {
         T0: getBonusParamFromPage('T0'),
         N0: getBonusParamFromPage('N0'),
@@ -513,11 +513,17 @@ function getParamsFromBonusPage() {
 
 function drawChart(bonusParams) {
 
+    let formulaProfile = getFormulaProfile();
+    if (!formulaProfile.supportsBonusChart) {
+        return;
+    }
+
     let B0 = bonusParams.B0;
     let L = bonusParams.L;
+    let chartParams = getCurrentParams(bonusParams.T0, bonusParams.N0, bonusParams.B0, bonusParams.L);
 
     function calcB(A) {
-        return B0 * (2 / Math.PI) * Math.atan(A / L)
+        return formulaProfile.calcB(A, chartParams)
     }
 
     //从B值反推A值
@@ -624,7 +630,7 @@ function run() {
             torrentListPage: "/torrents"
         }
     }
-    if (window.location.href.includes(site.bonusPage)) {
+    if (isBonusParamPage()) {
         let bonusParams = getParamsFromBonusPage();
         if (!bonusParams) {
             return;
@@ -739,6 +745,11 @@ function getParamsFromFetch() {
 
 function addDataCol() {
 
+    let formulaProfile = getFormulaProfile();
+    if (formulaProfile.disableTorrentCalc) {
+        return;
+    }
+
     updateBonusParams();
 
     let siteName = site.name;
@@ -746,19 +757,14 @@ function addDataCol() {
     let N0 = GM_getValue(siteName + ".N0");
     let B0 = GM_getValue(siteName + ".B0");
     let L = GM_getValue(siteName + ".L");
+    let currentParams = getCurrentParams(T0, N0, B0, L);
 
-    if (!(T0 && N0 && B0 && L)) {
+    if (!areParamsReady(formulaProfile, currentParams)) {
         return;
     }
 
-    function calcA(T, S, N) {
-        let c1 = 1 - Math.pow(10, -(T / T0));
-        // 当断种时，显示续种后的实际值，因为当前状态值无意义
-        N = N ? N : 1;
-        // 当前状态值，加入做种后实际值会小于当前值
-        // TODO: 改为双行显示为当前值和实际值
-        let c2 = 1 + Math.pow(2, .5) * Math.pow(10, -(N - 1) / (N0 - 1));
-        return c1 * S * c2;
+    function calcA(T, S, N, rowText) {
+        return formulaProfile.calcA(T, S, N, rowText || '', currentParams);
     }
 
     /**
@@ -798,7 +804,8 @@ function addDataCol() {
         var number = $this.children('td:eq(' + i_N + ')').text().trim().replace(/,/g, ''); // 获取人数，删除多余符号
         //console.log(number);
         var N = parseInt(number);
-        var A = calcA(T, S, N);
+        var rowText = $this.text();
+        var A = calcA(T, S, N, rowText);
         var ave = (A / S).toFixed(2);
         // tjupt的“魔力值详情”页面可以看到当前做种种子的A值，比对发现带“保种”标签种子的A值是公式计算A值的5倍
         if (site.name === "tjupt" && $this.find(".tag-keepseed").length !== 0) {
@@ -835,7 +842,7 @@ function addDataCol() {
     let aveTitle = hasNowA ? "当前做种状态下每GB每小时可以获得的魔力值" : "每GB的A值";
 
     function calcB(A) {
-        return B0 * (2 / Math.PI) * Math.atan(A / L)
+        return formulaProfile.calcB(A, currentParams)
     }
 
     function calcDeltaB(a) {
@@ -1064,7 +1071,7 @@ function addDataCol() {
 function mTeamWaitPageLoadAndRun() {
     let $ = jQuery;
     let contentObserver = new MutationObserver((mutationsList, observer) => {
-        let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
+        let isMybonusPage = isBonusParamPage()
         let bonusPageReady = isMybonusPage && $("li:has(b:contains('T0'))").length > 1;
         let torrentListPageReady = !isMybonusPage && $(seedTableSelector).length > 1;
         if (bonusPageReady || torrentListPageReady) {
@@ -1087,7 +1094,7 @@ let isMTeam = window.location.toString().indexOf("m-team") != -1
 let mTeamUrl
 let seedTableHeaderSelector = '.torrents:last-of-type>thead>tr';
 let seedTableSelector = isMTeam ? 'div.ant-spin-container:not(.ant-spin-blur)>div.mt-4>table>tbody>tr' : '.torrents:last-of-type>tbody>tr'
-let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
+let isMybonusPage = isBonusParamPage()
 if (isIgnoredSite()) {
     // skip ignored sites
 } else if (isMTeam) {
