@@ -476,8 +476,23 @@ const siteInfo = [
 let site;
 
 function getParamsFromBonusPage() {
-    let argsReady = true;
     let siteName = site.name;
+
+    // 检查该站点是否已被标记为"无法自动获取参数"
+    let bonusBlocked = GM_getValue(siteName + ".bonus_blocked");
+    if (bonusBlocked) {
+        console.log('[PTMyBonusCalc] 该站点已标记为无法自动获取魔力值参数，跳过。');
+        let T0 = GM_getValue(siteName + ".T0");
+        let N0 = GM_getValue(siteName + ".N0");
+        let B0 = GM_getValue(siteName + ".B0");
+        let L = GM_getValue(siteName + ".L");
+        if (T0 && N0 && B0 && L) {
+            return {T0: T0, N0: N0, B0: B0, L: L};
+        }
+        return null;
+    }
+
+    let argsReady = true;
     let T0 = GM_getValue(siteName + ".T0");
     let N0 = GM_getValue(siteName + ".N0");
     let B0 = GM_getValue(siteName + ".B0");
@@ -494,6 +509,12 @@ function getParamsFromBonusPage() {
         console.log('数据提取成功:', newT0, newN0, newB0, newL);
     } catch (error) {
         console.error('数据提取过程中出现错误:', error);
+        GM_setValue(siteName + ".bonus_blocked", true);
+        Toastify({
+            text: "魔力值参数获取失败，该站点已记录，后续不再自动获取。请手动配置参数。",
+            duration: 5000,
+            close: true
+        }).showToast();
         return null;
     }
 
@@ -508,6 +529,8 @@ function getParamsFromBonusPage() {
         GM_setValue(siteName + ".B0", newB0);
         GM_setValue(siteName + ".L", newL);
     }
+    // 提取成功，清除可能存在的 blocked 标记
+    GM_setValue(siteName + ".bonus_blocked", false);
     return {T0: newT0, N0: newN0, B0: newB0, L: newL};
 }
 
@@ -782,7 +805,7 @@ function addDataCol() {
         }
         // 适配tjupt的发生时间
         if (time == undefined || time == "") {
-            time = $this.children('td:eq(' + i_T + ')').html().replace("<br>", " ").trim();
+            time = $this.children('td:eq(' + i_T + ')').html().replace(/<br\s*\/?>/gi, " ").trim();
         }
         var T = (new Date().getTime() - new Date(time).getTime()) / 1e3 / 86400 / 7;
         var size = $this.children('td:eq(' + i_S + ')').text().trim();
