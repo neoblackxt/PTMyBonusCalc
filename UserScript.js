@@ -624,7 +624,7 @@ function run() {
             torrentListPage: "/torrents"
         }
     }
-    if (window.location.href.includes(site.bonusPage)) {
+    if (isBonusParamPage()) {
         let bonusParams = getParamsFromBonusPage();
         if (!bonusParams) {
             return;
@@ -1064,7 +1064,7 @@ function addDataCol() {
 function mTeamWaitPageLoadAndRun() {
     let $ = jQuery;
     let contentObserver = new MutationObserver((mutationsList, observer) => {
-        let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
+        let isMybonusPage = isBonusParamPage()
         let bonusPageReady = isMybonusPage && $("li:has(b:contains('T0'))").length > 1;
         let torrentListPageReady = !isMybonusPage && $(seedTableSelector).length > 1;
         if (bonusPageReady || torrentListPageReady) {
@@ -1087,7 +1087,7 @@ let isMTeam = window.location.toString().indexOf("m-team") != -1
 let mTeamUrl
 let seedTableHeaderSelector = '.torrents:last-of-type>thead>tr';
 let seedTableSelector = isMTeam ? 'div.ant-spin-container:not(.ant-spin-blur)>div.mt-4>table>tbody>tr' : '.torrents:last-of-type>tbody>tr'
-let isMybonusPage = window.location.toString().indexOf("mybonus") != -1
+let isMybonusPage = isBonusParamPage()
 if (isIgnoredSite()) {
     // skip ignored sites
 } else if (isMTeam) {
