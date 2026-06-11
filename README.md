@@ -47,11 +47,15 @@ https://github.com/neoblackxt/PTMyBonusCalc/issues
 
 如果可以，希望你能邀请我注册这些站点，这样我可以更方便的调试代码，修复BUG。 Telegram:@naoguregt EMAIL:neoblackxt在outlook点com 在换成@，点换成. （防止爬虫自动抓取发送垃圾邮件）
 
-### Credit
+### 贡献者
 
-neoblackxt
+感谢所有为本项目做出贡献的开发者：
 
-基于LaneLau 的[NexusPHP魔力计算器](https://greasyfork.org/zh-CN/scripts/416471-nexusphp%E9%AD%94%E5%8A%9B%E8%AE%A1%E7%AE%97%E5%99%A8)修改
+<a href="https://github.com/neoblackxt/PTMyBonusCalc/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=neoblackxt/PTMyBonusCalc" />
+</a>
+
+本项目基于 LaneLau 的 [NexusPHP魔力计算器](https://greasyfork.org/zh-CN/scripts/416471-nexusphp%E9%AD%94%E5%8A%9B%E8%AE%A1%E7%AE%97%E5%99%A8) 修改。
 
 ### 开源协议
 
