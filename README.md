@@ -53,11 +53,6 @@ neoblackxt
 
 基于LaneLau 的[NexusPHP魔力计算器](https://greasyfork.org/zh-CN/scripts/416471-nexusphp%E9%AD%94%E5%8A%9B%E8%AE%A1%E7%AE%97%E5%99%A8)修改
 
-### 捐助
-
-<img src="https://s2.loli.net/2022/02/04/sb8COkVURQdBziT.png" width="400" height="600" /><BR>
-<img src="https://s2.loli.net/2022/02/04/dCHuwrAKS8qXcsg.jpg" width="400" height="600" /><BR>
-
 ### 开源协议
 
 GPL v3
