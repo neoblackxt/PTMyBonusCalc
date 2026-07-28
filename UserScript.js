@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.2.0
+// @version      2.2.1
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
 // @author       neoblackxt, LaneLau
 // @license      GPL-3.0
@@ -563,7 +563,7 @@ function drawChart(bonusParams) {
         return Math.tan(B / B0 / (2 / Math.PI)) * L
     }
 
-    let A = isMTeam ? 0 : parseFloat($("div:contains(' (A = ')")[0].innerText.split(" = ")[1]);
+    let A = isMTeam ? 0 : parseFloat($("div:contains('A = ')")[0].innerText.split(" = ")[1]);
     let B = isMTeam ? parseFloat($("td:contains('基本獎勵')+td+td")[0].innerText) : calcB(A);
     // 剔除M-Team的基本奖励中做种数奖励
     if (isMTeam) {
@@ -594,7 +594,7 @@ function drawChart(bonusParams) {
         data.push([i, calcB(i)])
     }
 
-    let insertPos = isMTeam ? $("ul+table") : $("table+h1")
+    let insertPos = isMTeam ? $("ul+table") : $("table~h1")
     insertPos.before('<div id="main" style="width: 600px;height:400px; margin:auto;"></div>')
 
     var myChart = echarts.init(document.getElementById('main'));
@@ -754,7 +754,7 @@ function getParamsFromFetch() {
             newN0 = parseFloat($html.find("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
             newB0 = parseFloat($html.find("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
             newL = parseFloat($html.find("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
-            a = parseFloat($html.find("div:contains(' (A = ')")[0].innerText.split(" = ")[1]);
+            a = parseFloat($html.find("div:contains('A = ')")[0].innerText.split(" = ")[1]);
             storageData();
         });
     }
