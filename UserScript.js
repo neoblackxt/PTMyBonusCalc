@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.2.1
+// @version      2.2.2
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
 // @author       neoblackxt, LaneLau
 // @license      GPL-3.0
@@ -938,14 +938,14 @@ function addDataCol() {
                         colAve.html(textDeltaBPerGB);
                         colAve.attr('title', 'A/GB: ' + ave);
                     } else {
-                        $this.children("td:last").before('<td class="rowfollow" data-calc-a="' + deltaB + '" ' +
+                        $this.children("td:last").before('<td class="rowfollow" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-a="' + deltaB + '" ' +
                             'title="A: ' + a.toFixed(2) + '">' + deltaB.toFixed(2) + '</td>',
-                            '<td class="rowfollow" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' + ave + '">'
+                            '<td class="rowfollow" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' + ave + '">'
                             + textDeltaBPerGB + '</td>');
                     }
                 } else {
-                    $this.children("td:last").before('<td class="rowfollow" data-calc-a="' + a +
-                        '">' + a.toFixed(2) + '</td>', '<td class="rowfollow" data-calc-ave="' + ave +
+                    $this.children("td:last").before('<td class="rowfollow" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-a="' + a +
+                        '">' + a.toFixed(2) + '</td>', '<td class="rowfollow" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-ave="' + ave +
                         '">' + textAve + '</td>');
                 }
             }
@@ -970,9 +970,9 @@ function addDataCol() {
                 return
             }
             if (!addFlag) {
-                head.children(cellTag + ":last").before('<' + cellTag + ' class="colhead" style="cursor: pointer;" ' +
+                head.children(cellTag + ":last").before('<' + cellTag + ' class="colhead" data-userscript="PTMyBonusCalc" data-from-calc="true" style="cursor: pointer;" ' +
                     'id="calcTHeadA" title="' + aTitle + '">' + aHeadText + '</' + cellTag + '>',
-                    '<' + cellTag + ' class="colhead" style="cursor: pointer;" ' +
+                    '<' + cellTag + ' class="colhead" data-userscript="PTMyBonusCalc" data-from-calc="true" style="cursor: pointer;" ' +
                     'id="calcTHeadAve" title="' + aveTitle + '">' + aveHeadText + '</' + cellTag + '>');
             } else {
                 $("#calcTHeadA").attr('title', aTitle);
@@ -1000,9 +1000,9 @@ function addDataCol() {
         i_N = colLen - 3
         if (!addFlag) {
             $('div.mt-4>table>thead>tr>th:last')
-                .after('<th class="border-0 border-b border-solid border-[--mt-line-color] p-2 " ' +
+                .after('<th class="border-0 border-b border-solid border-[--mt-line-color] p-2 " data-userscript="PTMyBonusCalc" data-from-calc="true" ' +
                     'style="width: 65px;cursor: pointer;" title="' + aTitle + '" id="calcTHeadA"> ' + aHeadText + ' </th>',
-                    '<th class="border-0 border-b border-solid border-[--mt-line-color] p-2 " ' +
+                    '<th class="border-0 border-b border-solid border-[--mt-line-color] p-2 " data-userscript="PTMyBonusCalc" data-from-calc="true" ' +
                     'style="width: 80px;cursor: pointer;" title="' + aveTitle + '" id="calcTHeadAve"> ' + aveHeadText + ' </th>');
         } else {
             $("#calcTHeadA").attr('title', aTitle);
@@ -1020,22 +1020,22 @@ function addDataCol() {
                 let deltaB = calcDeltaB(a);
                 let deltaBPerGB = deltaB / s;
                 tdTextA = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
-                    'align="center" data-from-calc="true" data-calc-a="' + deltaB + '" title="A: ' +
+                    'align="center" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-a="' + deltaB + '" title="A: ' +
                     a.toFixed(2) + '">' + deltaB.toFixed(2) + '</td>';
                 textA = deltaB.toFixed(2);
                 textAve = makeTextAve(deltaBPerGB.toFixed(2), colorsOfNowA);
                 tdTextAve = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
-                    'align="center" data-from-calc="true" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' +
+                    'align="center" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-ave="' + deltaBPerGB + '" title="A/GB: ' +
                     ave + '">' + textAve + '</td>';
             } else {
                 // data-from-calc用于判断该元素是否由脚本生成
                 tdTextA = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
-                    'align="center" data-from-calc="true" data-calc-a="' + a + '">'
+                    'align="center" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-a="' + a + '">'
                     + a.toFixed(2) + '</td>'
                 textA = a.toFixed(2);
                 textAve = makeTextAve(ave);
                 tdTextAve = '<td class="border-0 border-b border-solid border-[--mt-line-color] p-0 " ' +
-                    'align="center" data-from-calc="true" data-calc-ave="' + ave + '">'
+                    'align="center" data-userscript="PTMyBonusCalc" data-from-calc="true" data-calc-ave="' + ave + '">'
                     + textAve + '</td>';
             }
             if ($this.children("td:last").data("fromCalc")) {
@@ -1169,8 +1169,8 @@ function addDataColUserdetailsTable($table) {
 
     if (!alreadyAdded) {
         $rows.first().children("td:last").before(
-            '<td class="colhead" align="center" title="A值" id="calcTHeadA">A</td>',
-            '<td class="colhead" align="center" title="每GB的A值" id="calcTHeadAve">A/GB</td>'
+            '<td class="colhead" data-userscript="PTMyBonusCalc" data-from-calc="true" align="center" title="A值" id="calcTHeadA">A</td>',
+            '<td class="colhead" data-userscript="PTMyBonusCalc" data-from-calc="true" align="center" title="每GB的A值" id="calcTHeadAve">A/GB</td>'
         );
     }
 
@@ -1184,8 +1184,8 @@ function addDataColUserdetailsTable($table) {
             $this.children("td:last").html(textAve);
         } else {
             $this.children("td:last").before(
-                '<td class="rowfollow" align="center">' + result.a.toFixed(2) + '</td>',
-                '<td class="rowfollow" align="center">' + textAve + '</td>'
+                '<td class="rowfollow" data-userscript="PTMyBonusCalc" data-from-calc="true" align="center">' + result.a.toFixed(2) + '</td>',
+                '<td class="rowfollow" data-userscript="PTMyBonusCalc" data-from-calc="true" align="center">' + textAve + '</td>'
             );
         }
     });
