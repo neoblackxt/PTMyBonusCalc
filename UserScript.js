@@ -1,10 +1,11 @@
 // ==UserScript==
-// @name         PT站点魔力计算器
+// @name         PT站点魔力计算器 Lite
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
 // @version      2.2.2
-// @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
+// @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。Lite 精简版：仅精简了少量站点适配，完整版与源码见 GitHub 仓库。
 // @author       neoblackxt, LaneLau
 // @license      GPL-3.0
+// @homepageURL  https://github.com/neoblackxt/PTMyBonusCalc
 // @match        *://kp.m-team.cc/*
 // @match        *://13city.org/torrents*
 // @match        *://*.13city.org/torrents*
@@ -56,8 +57,6 @@
 // @match        *://*.dubhe.site/torrents*
 // @match        *://duckboobee.org/torrents*
 // @match        *://*.duckboobee.org/torrents*
-// @match        *://empornium.sx/torrents*
-// @match        *://*.empornium.sx/torrents*
 // @match        *://zp.m-team.io/*
 // @match        *://*.hddolby.com/torrents*
 // @match        *://*.leaguehd.com/torrents*
