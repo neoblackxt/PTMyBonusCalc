@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.2.2
+// @version      2.2.3
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。
 // @author       neoblackxt, LaneLau
 // @license      GPL-3.0
@@ -444,6 +444,24 @@ const formulaProfiles = {
         supportsBonusChart: false,
         disableTorrentCalc: true,
         unsupportedMessage: 'HHANClub魔力页未提供完整基础公式参数，暂不计算单种A值，避免显示错误结果。'
+    },
+    hdsky: {
+        name: 'HDSky',
+        requiredParams: ['T0', 'N0', 'B0', 'L'],
+        supportsBonusChart: true,
+        columnTitle: 'A@A/GB',
+        columnTip: 'A值@每GB的A值（含官方种权重K与M/(Ni+1)）',
+        calcA: function (T, S, N, rowText, params, $row) {
+            var c1 = 1 - Math.pow(10, -(T / params.T0));
+            N = N ? N : 1;
+            var c2 = 1 + Math.pow(2, .5) * Math.pow(10, -(N - 1) / (params.N0 - 1));
+            var K = isOfficialTorrent($row, rowText) ? 3 : 1;
+            var M = 2; // HDSky 魔力页现值：种子期望的目标做种人数
+            return c1 * S * c2 * K * M / (N + 1);
+        },
+        calcB: function (A, params) {
+            return params.B0 * (2 / Math.PI) * Math.atan(A / params.L)
+        }
     }
 }
 
@@ -457,7 +475,21 @@ function getFormulaProfile() {
     if (host === 'hhanclub.net') {
         return formulaProfiles.hhanclub
     }
+    if (host === 'hdsky.me') {
+        return formulaProfiles.hdsky
+    }
     return formulaProfiles.default
+}
+
+// HDSky 官方种（K=3）判定：站点未公布精确 DOM 标记，先以行文本与常见图标属性启发式识别
+function isOfficialTorrent($row, rowText) {
+    if (/官方|官組|官组/.test(rowText || '')) {
+        return true;
+    }
+    if ($row && $row.find) {
+        return $row.find('img.official, [title*="官方"], [alt*="官方"]').length > 0;
+    }
+    return false;
 }
 
 function areParamsReady(profile, params) {
@@ -483,6 +515,12 @@ const siteInfo = [
 ];
 
 let site;
+
+// 参数 li 在魔力页通常出现两处，历史行为取第 2 处；仅一处时回退第 1 处，避免取值越界抛错导致站点被标记 blocked
+function pickParamLi($scope, param) {
+    let lis = $scope.find("li:has(b:contains('" + param + "'))");
+    return lis[1] || lis[0];
+}
 
 function getParamsFromBonusPage() {
     let siteName = site.name;
@@ -511,10 +549,10 @@ function getParamsFromBonusPage() {
     }
     let newT0, newN0, newB0, newL;
     try {
-        newT0 = parseInt($("li:has(b:contains('T0'))")[1].innerText.split(" = ")[1]);
-        newN0 = parseInt($("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
-        newB0 = parseInt($("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
-        newL = parseInt($("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
+        newT0 = parseInt(pickParamLi($("body"), 'T0').innerText.split(" = ")[1]);
+        newN0 = parseInt(pickParamLi($("body"), 'N0').innerText.split(" = ")[1]);
+        newB0 = parseInt(pickParamLi($("body"), 'B0').innerText.split(" = ")[1]);
+        newL = parseInt(pickParamLi($("body"), 'L').innerText.split(" = ")[1]);
         console.log('数据提取成功:', newT0, newN0, newB0, newL);
     } catch (error) {
         console.error('数据提取过程中出现错误:', error);
@@ -744,22 +782,30 @@ function getParamsFromFetch() {
             newL = parseFloat(bonusData.formulaParams.lbonus);
             a = parseFloat(bonusData.formulaParams.a);
             storageData();
+        }).catch(error => {
+            console.error('[PTMyBonusCalc] 时魔参数获取失败:', error);
         });
     } else {
         fetch(window.location.origin + site.bonusPage, {
             method: 'GET'
         }).then(response => response.text()).then(html => {
             let $html = $(html);
-            newT0 = parseFloat($html.find("li:has(b:contains('T0'))")[1].innerText.split(" = ")[1]);
-            newN0 = parseFloat($html.find("li:has(b:contains('N0'))")[1].innerText.split(" = ")[1]);
-            newB0 = parseFloat($html.find("li:has(b:contains('B0'))")[1].innerText.split(" = ")[1]);
-            newL = parseFloat($html.find("li:has(b:contains('L'))")[1].innerText.split(" = ")[1]);
+            newT0 = parseFloat(pickParamLi($html, 'T0').innerText.split(" = ")[1]);
+            newN0 = parseFloat(pickParamLi($html, 'N0').innerText.split(" = ")[1]);
+            newB0 = parseFloat(pickParamLi($html, 'B0').innerText.split(" = ")[1]);
+            newL = parseFloat(pickParamLi($html, 'L').innerText.split(" = ")[1]);
             a = parseFloat($html.find("div:contains('A = ')")[0].innerText.split(" = ")[1]);
             storageData();
+        }).catch(error => {
+            console.error('[PTMyBonusCalc] 时魔参数获取失败:', error);
         });
     }
 
     function storageData() {
+        if (![newT0, newN0, newB0, newL, a].every(Number.isFinite)) {
+            console.error('[PTMyBonusCalc] 时魔参数解析异常，跳过写入:', newT0, newN0, newB0, newL, a);
+            return;
+        }
         let activeSeed = getActiveSeed();
         if (activeSeed !== -1) {
             GM_setValue(site.name + ".activeSeed", activeSeed);
@@ -793,7 +839,7 @@ function getParamsFromFetch() {
 }
 
 
-function calcA(T, S, N, rowText) {
+function calcA(T, S, N, rowText, $row) {
     let formulaProfile = getFormulaProfile();
     let siteName = site.name;
     let T0 = GM_getValue(siteName + ".T0");
@@ -804,7 +850,7 @@ function calcA(T, S, N, rowText) {
     if (!areParamsReady(formulaProfile, currentParams)) {
         return 0;
     }
-    return formulaProfile.calcA(T, S, N, rowText || '', currentParams);
+    return formulaProfile.calcA(T, S, N, rowText || '', currentParams, $row);
 }
 
 /**
@@ -843,7 +889,7 @@ function makeA($this, i_T, i_S, i_N) {
     var number = $this.children('td:eq(' + i_N + ')').text().trim().replace(/,/g, ''); // 获取人数，删除多余符号
     var N = parseInt(number);
     var rowText = $this.text();
-    var A = calcA(T, S, N, rowText);
+    var A = calcA(T, S, N, rowText, $this);
     var ave = (A / S).toFixed(2);
     // tjupt的"魔力值详情"页面可以看到当前做种种子的A值，比对发现带"保种"标签种子的A值是公式计算A值的5倍
     if (site.name === "tjupt" && $this.find(".tag-keepseed").length !== 0) {
