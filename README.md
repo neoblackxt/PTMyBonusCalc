@@ -22,7 +22,11 @@
 
 ### 使用
 
-脚本安装：https://greasyfork.org/en/scripts/439369-pt站点魔力计算器
+脚本安装（完整版，需登录 GreasyFork 后才能查看页面）：https://greasyfork.org/en/scripts/439369-pt站点魔力计算器
+
+脚本安装（Lite 版，无需登录可直接访问）：https://greasyfork.org/en/scripts/596872-pt站点魔力计算器-lite
+
+**说明**：完整版因适配范围包含成人站点，被 GreasyFork 标记为成人内容，匿名访问其页面会显示 404，需登录 GreasyFork 账号后才能查看并安装；Lite 版功能逻辑与完整版完全相同，仅精简极少量站点适配。
 
 可自行添加网站->在管理面板->已安装脚本->本脚本->编辑->设置->包括/排除->用户匹配->添加，如`*://*.hddolby.com/torrents*`
 
