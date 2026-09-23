@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PT站点魔力计算器 Lite
 // @namespace    https://github.com/neoblackxt/PTMyBonusCalc
-// @version      2.2.3
+// @version      2.2.4
 // @description  在使用NexusPHP架构的PT站点显示每个种子的A值和每GB的A值。Lite 精简版：仅精简了少量站点适配，完整版与源码见 GitHub 仓库。
 // @author       neoblackxt, LaneLau
 // @license      GPL-3.0
@@ -454,7 +454,7 @@ const formulaProfiles = {
             var c1 = 1 - Math.pow(10, -(T / params.T0));
             N = N ? N : 1;
             var c2 = 1 + Math.pow(2, .5) * Math.pow(10, -(N - 1) / (params.N0 - 1));
-            var K = isOfficialTorrent($row, rowText) ? 3 : 1;
+            var K = isOfficialTorrent($row) ? 3 : 1;
             var M = 2; // HDSky 魔力页现值：种子期望的目标做种人数
             return c1 * S * c2 * K * M / (N + 1);
         },
@@ -480,15 +480,15 @@ function getFormulaProfile() {
     return formulaProfiles.default
 }
 
-// HDSky 官方种（K=3）判定：站点未公布精确 DOM 标记，先以行文本与常见图标属性启发式识别
-function isOfficialTorrent($row, rowText) {
-    if (/官方|官組|官组/.test(rowText || '')) {
-        return true;
+// HDSky 官方种（K=3）判定：唯一标记是标题格内的 <span class="optiontag">官组</span>（#37 实测确认，
+// 全站无 img.official/[title*=官方] 等标记）；"官方"一词会出现在种子简介文本中造成误判，不可参与判定
+function isOfficialTorrent($row) {
+    if (!$row || !$row.find) {
+        return false;
     }
-    if ($row && $row.find) {
-        return $row.find('img.official, [title*="官方"], [alt*="官方"]').length > 0;
-    }
-    return false;
+    return $row.find('span.optiontag').filter(function () {
+        return /官组|官組/.test($(this).text());
+    }).length > 0;
 }
 
 function areParamsReady(profile, params) {
